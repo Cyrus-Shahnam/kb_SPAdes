@@ -1,7 +1,7 @@
 #
 # define display information
 #
-name: Assemble Reads with metaSPAdes - v3.15.3
+name: Assemble Reads with metaSPAdes - v4.2.0
 tooltip: |
     Assemble metagenomic reads using the SPAdes assembler.
 screenshots: []
@@ -57,26 +57,53 @@ parameters :
         short-hint : |
             Assembly only (No Error Correction).
 
+    # --- NEW for SPAdes 4.2 ---
+    threads:
+        ui-name: |
+            Threads
+        short-hint: |
+            CPU threads for metaSPAdes (-t). Default 16. Do not exceed your job’s allocation.
+
+    memory_gb:
+        ui-name: |
+            Max memory (GB)
+        short-hint: |
+            Cap SPAdes memory use (-m). Advanced; default 250 GB. Keep within job limits.
+
+    emit_gfa11:
+        ui-name: |
+            Emit legacy GFA 1.1
+        short-hint: |
+            Output GFA v1.1 instead of default v1.2 (for older downstream tools).
+
+# Order the form: key fields first; tuck others under Advanced
+layout:
+  - read_libraries
+  - output_contigset_name
+  - min_contig_length
+  - threads
+  - advanced:
+      - kmer_sizes
+      - skip_error_correction
+      - memory_gb
+      - emit_gfa11
+
 description : |
     <p>This is a KBase wrapper for the <a href="http://cab.spbu.ru/software/spades/" target="_blank">metaSPAdes</a> genomic reads assembler. MetaSPAdes is designed for assembling shotgun metagenomic reads.</p>
 
     <p><b>Operational notes:</b>
     <ul>
-      <li>Currently the wrapper only supports Illumina, IonTorrent, PacBIO CLR and PacBIO CCS in FASTQ format, either uncompressed or gzipped.</li>
-      <li>The --careful flag is always used, except for metagenomic assemblies where it is not allowed.</li>
-      <li>Metagenome and Plasmid assembly can only be run on one reads library.</li>
-      <li>Metagenome assembly can only be run on a paired end library.</li>
-      <li>Illumina and IonTorrent reads can not be mixed in the same assembly.</li>
-      <li>PacBIO CLR needs to be run with at least one accompanying Illumina or IonTorrent library.</li>
-      <li>The k-mer parameter is autodetected by SPAdes, if the values are not specified in input.</li>
-      <li>The PHRED parameter is autodetected by ea-utils.</li>
-      <li>metaSPAdes might be very sensitive to the presence of the technical sequences remaining in the data (most notably adapter sequence regions), hence the authors recommend that you run quality control and pre-process your data prior to assembly. KBase has multiple Apps such as <a href=”https://narrative.kbase.us/#catalog/apps/kb_trimmomatic/run_trimmomatic/release”>Trimmomatic</a> and <a href=”https://narrative.kbase.us/#catalog/apps/kb_cutadapt/remove_adapters/release”>Cutadapt</a> that can be used for sequence cleaning.</li>
+      <li>Currently the wrapper supports Illumina/IonTorrent paired-end FASTQ (uncompressed or gzipped).</li>
+      <li>The <code>--careful</code> flag is <b>not allowed</b> for metagenomic assemblies and is not used.</li>
+      <li>Metagenome assembly can only be run on one paired-end library.</li>
+      <li>The k-mer parameter is autodetected by SPAdes if values are not specified.</li>
+      <li>metaSPAdes can be sensitive to residual adapter/technical sequences; consider pre-processing with tools like Trimmomatic or Cutadapt before assembly.</li>
     </ul>
     </p>
 
-    <p>For questions, please <a href=”http://kbase.us/support/”>contact us</a>.</p>
+    <p>For questions, please <a href="http://kbase.us/support/">contact us</a>.</p>
 
-    <p>SPAdes version: 3.15.3 was released under GPLv2 on July 22, 2021</p>
+    <p>SPAdes version: 4.2.0</p>
 
 publications :
     -

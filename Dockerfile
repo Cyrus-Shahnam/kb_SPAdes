@@ -1,41 +1,41 @@
-FROM kbase/sdkbase2:python
+FROM kbase/sdkpython:3.8.10
 MAINTAINER KBase Developer
-# -----------------------------------------
-# In this section, you can install any system dependencies required
-# to run your App.  For instance, you could place an apt-get update or
-# install line here, a git checkout to download code, or run any other
-# installation scripts.
 
+ENV DEBIAN_FRONTEND=noninteractive
 RUN echo "start building docker image"
 
+# minimal tools; no need for full build chain when using prebuilt SPAdes
 RUN apt-get update \
-    && apt-get -y install python3-dev \
-    && apt-get -y install wget \
-    && apt-get -y install gcc
+ && apt-get -y install --no-install-recommends wget ca-certificates bzip2 pigz gcc \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --upgrade pip \
-    && pip3 install psutil \
-    && python --version
+# Python bits some wrappers rely on
+RUN pip3 install --upgrade pip \
+ && pip3 install psutil \
+ && python3 --version
 
-ENV SPADES_VERSION='3.15.3'
+# ----- SPAdes 4.2.0 (prebuilt Linux tarball) -----
+ENV SPADES_VERSION="4.2.0"
+WORKDIR /opt
+RUN wget -q https://github.com/ablab/spades/releases/download/v${SPADES_VERSION}/SPAdes-${SPADES_VERSION}-Linux.tar.gz \
+ && tar -xzf SPAdes-${SPADES_VERSION}-Linux.tar.gz \
+ && rm SPAdes-${SPADES_VERSION}-Linux.tar.gz
 
-RUN cd /opt \
-    && wget http://cab.spbu.ru/files/release${SPADES_VERSION}/SPAdes-${SPADES_VERSION}-Linux.tar.gz \
-    && tar -xvzf SPAdes-${SPADES_VERSION}-Linux.tar.gz \
-    && rm SPAdes-${SPADES_VERSION}-Linux.tar.gz
+# Add to PATH
+ENV PATH="${PATH}:/opt/SPAdes-${SPADES_VERSION}-Linux/bin"
 
-ENV PATH $PATH:/opt/SPAdes-${SPADES_VERSION}-Linux/bin
+# Quick sanity checks (version + self-test)
+RUN spades.py --version || true \
+ && spades.py --test -o /tmp/spades_selftest || true
 
 # -----------------------------------------
-
+# Your module
 COPY ./ /kb/module
 RUN mkdir -p /kb/module/work
 RUN chmod -R a+rw /kb/module
 
 WORKDIR /kb/module
-
 RUN make
 
-ENTRYPOINT [ "./scripts/entrypoint.sh" ]
-
-CMD [ ]
+ENTRYPOINT ["./scripts/entrypoint.sh"]
+CMD []

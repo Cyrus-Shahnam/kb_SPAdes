@@ -197,17 +197,32 @@ A coverage cutoff is not specified.
             yaml.safe_dump(yml, yml_file)
         return yml_path, iontorrent_present
 
-    def exec_spades(self, dna_source, reads_data, phred_type, kmer_sizes, skip_error_correction):
-        mem = (psutil.virtual_memory().available / self.GB -
-               self.MEMORY_OFFSET_GB)
-        if mem < self.MIN_MEMORY_GB:
-            raise ValueError(
-                'Only ' + str(psutil.virtual_memory().available) +
-                ' bytes of memory are available. The SPAdes wrapper will' +
-                ' not run without at least ' +
-                str(self.MIN_MEMORY_GB + self.MEMORY_OFFSET_GB) +
-                ' gigabytes available')
+    def exec_spades(self, dna_source, reads_data, phred_type, kmer_sizes, skip_error_correction,
+                    threads_param=None, memory_gb_param=None, emit_gfa11=False):
+        """
+        Run SPAdes with existing YAML dataset pathing but allow UI overrides:
+          - threads_param -> --threads / -t
+          - memory_gb_param -> --memory / -m
+          - emit_gfa11 -> --gfa11 (forces legacy GFA 1.1; default is 1.2 in 4.x)
+        """
+        # Determine memory cap (GB)
+        if memory_gb_param is not None:
+            try:
+                mem = int(memory_gb_param)
+            except Exception:
+                raise ValueError("memory_gb must be an integer (GB)")
+        else:
+            mem = (psutil.virtual_memory().available / self.GB -
+                   self.MEMORY_OFFSET_GB)
+            if mem < self.MIN_MEMORY_GB:
+                raise ValueError(
+                    'Only ' + str(psutil.virtual_memory().available) +
+                    ' bytes of memory are available. The SPAdes wrapper will' +
+                    ' not run without at least ' +
+                    str(self.MIN_MEMORY_GB + self.MEMORY_OFFSET_GB) +
+                    ' gigabytes available')
 
+        # Caps for meta vs non-meta
         if dna_source == self.PARAM_IN_METAGENOME:
             max_mem = self.MAX_MEMORY_GB_META_SPADES
             max_threads = self.MAX_THREADS_META
@@ -215,7 +230,17 @@ A coverage cutoff is not specified.
             max_mem = self.MAX_MEMORY_GB_SPADES
             max_threads = self.MAX_THREADS
 
-        threads = min(max_threads, psutil.cpu_count() * self.THREADS_PER_CORE)
+        # Determine threads
+        if threads_param is not None:
+            try:
+                threads = int(threads_param)
+            except Exception:
+                raise ValueError("threads must be an integer")
+            if threads < 1:
+                threads = 1
+            threads = min(threads, max_threads)
+        else:
+            threads = min(max_threads, psutil.cpu_count() * self.THREADS_PER_CORE)
 
         if mem > max_mem:
             mem = max_mem
@@ -227,10 +252,14 @@ A coverage cutoff is not specified.
         if not os.path.exists(tmpdir):
             os.makedirs(tmpdir)
 
+        # Build command
         cmd = ['spades.py', '--threads', str(threads),
                '--memory', str(int(mem)), '-o', outdir, '--tmp-dir', tmpdir]
 
-        print("THE DNA SOURCE IS : " + str(dna_source))
+        if emit_gfa11:
+            cmd.append('--gfa11')  # default for 4.x is GFA 1.2; this forces 1.1
+
+        self.log("THE DNA SOURCE IS : " + str(dna_source))
         if dna_source == self.PARAM_IN_SINGLE_CELL:
             cmd += ['--sc']
         if dna_source == self.PARAM_IN_PLASMID:
@@ -238,7 +267,7 @@ A coverage cutoff is not specified.
             # The plasmid assembly can only be run on a single library
             if len(reads_data) > 1:
                 raise ValueError('Plasmid assembly requires that one ' +
-                                 'and only one library as input. ' +
+                                 'and only one library be provided. ' +
                                  str(len(reads_data)) + ' libraries detected.')
         if dna_source == self.PARAM_IN_METAGENOME:
             cmd += ['--meta']
@@ -253,16 +282,16 @@ A coverage cutoff is not specified.
                 raise ValueError(error_msg)
         else:
             cmd += ['--careful']
+
         cmd += ['--phred-offset', phred_type]
 
         if kmer_sizes is not None:
+            # Preserve prior arg shape (“-k 21,33,55” as a single token) for compatibility
             cmd += ['-k ' + kmer_sizes]
+
         if skip_error_correction == 1:
             cmd += ['--only-assembler']
 
-#        print("LENGTH OF READSDATA IN EXEC: " + str(len(reads_data)))
-#        print("READS DATA: " + str(reads_data))
-#        print("SPADES YAML: " + str(self.generate_spades_yaml(reads_data)))
         spades_yaml_path, iontorrent_present = self.generate_spades_yaml(reads_data)
         if iontorrent_present == 1:
             cmd += ['--iontorrent']
@@ -644,16 +673,32 @@ A coverage cutoff is not specified.
             if (len(params[self.PARAM_IN_KMER_SIZES])) > 0:
                 kmer_sizes = ",".join(str(num) for num in params[self.PARAM_IN_KMER_SIZES])
 
-        skip_error_correction = 0
-        if self.PARAM_IN_SKIP_ERR_CORRECT in params and params[self.PARAM_IN_SKIP_ERR_CORRECT] is not None:
-            if params[self.PARAM_IN_SKIP_ERR_CORRECT] == 1:
-                skip_error_correction = 1
+        # normalize skip_error_correction (checkbox may be 0/1 or "0"/"1")
+        skip_error_correction = 1 if str(params.get(self.PARAM_IN_SKIP_ERR_CORRECT, 0)).lower() in ('1', 'true') else 0
+
+        # new UI overrides
+        threads_param = params.get('threads')
+        memory_gb_param = params.get('memory_gb')
+
+        # checkbox may be "0"/"1" or boolean
+        emit_raw = params.get('emit_gfa11', 0)
+        emit_gfa11 = False
+        if isinstance(emit_raw, bool):
+            emit_gfa11 = emit_raw
+        else:
+            try:
+                emit_gfa11 = str(emit_raw).lower() in ('1', 'true', 'yes', 'on')
+            except Exception:
+                emit_gfa11 = False
 
         spades_out = self.exec_spades(params[self.PARAM_IN_DNA_SOURCE],
                                       reads_data,
                                       phred_type,
                                       kmer_sizes,
-                                      skip_error_correction)
+                                      skip_error_correction,
+                                      threads_param=threads_param,
+                                      memory_gb_param=memory_gb_param,
+                                      emit_gfa11=emit_gfa11)
 
         self.log('SPAdes output dir: ' + spades_out)
 
@@ -819,7 +864,7 @@ A coverage cutoff is not specified.
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",
-                     'message': "",
+                     'message": "",
                      'version': self.VERSION,
                      'git_url': self.GIT_URL,
                      'git_commit_hash': self.GIT_COMMIT_HASH}

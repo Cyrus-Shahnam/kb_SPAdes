@@ -9,7 +9,7 @@
         "input": null,
         "output": "no-display"
     },
-    "parameters": [ 
+    "parameters": [
         {
             "id": "lib_ref",
             "optional": false,
@@ -42,18 +42,18 @@
             "dropdown_options": {
                 "options": [
                     {
-                      "value": "single",
-                      "display": "single"
+                        "value": "single",
+                        "display": "single"
                     },
                     {
-                     "value": "paired-end",
-                     "display": "paired-end"
+                        "value": "paired-end",
+                        "display": "paired-end"
                     },
                     {
-                      "value": "mate-pairs",
-                      "display": "mate-pairs"
+                        "value": "mate-pairs",
+                        "display": "mate-pairs"
                     }
-                  ]
+                ]
             }
         },
         {
@@ -77,30 +77,30 @@
             "dropdown_options": {
                 "options": [
                     {
-                      "value": "pacbio_ccs",
-                      "display": "pacbio_ccs"
+                        "value": "pacbio_ccs",
+                        "display": "pacbio_ccs"
                     },
                     {
-                      "value": "pacbio_clr",
-                      "display": "pacbio_clr"
+                        "value": "pacbio_clr",
+                        "display": "pacbio_clr"
                     },
                     {
-                      "value": "nanopore",
-                      "display": "nanopore"
+                        "value": "nanopore",
+                        "display": "nanopore"
                     },
                     {
-                      "value": "sanger",
-                      "display": "sanger"
+                        "value": "sanger",
+                        "display": "sanger"
                     },
                     {
-                      "value": "trusted-contigs",
-                      "display": "trusted-contigs"
+                        "value": "trusted-contigs",
+                        "display": "trusted-contigs"
                     },
                     {
-                      "value": "untrusted-contigs",
-                      "display": "untrusted-contigs"
+                        "value": "untrusted-contigs",
+                        "display": "untrusted-contigs"
                     }
-                  ]
+                ]
             }
         },
         {
@@ -109,34 +109,34 @@
             "advanced": true,
             "allow_multiple": false,
             "default_values": ["standard"],
-            "field_type" : "dropdown",
-            "dropdown_options":{
-            "options": [
-                {
-                    "value": "standard",
-                    "display": "standard"
-                },
-                {
-                  "value": "single_cell",
-                  "display": "single cell"
-                },
-                {
-                  "value": "plasmid",
-                  "display": "plasmid"
-                },
-                {
-                  "value": "metagenomic",
-                  "display": "metagenomic"
-                },
-                {
-                  "value": "rna",
-                  "display": "rna"
-                },
-                {
-                  "value": "iontorrent",
-                  "display": "iontorrent"
-                }
-              ]
+            "field_type": "dropdown",
+            "dropdown_options": {
+                "options": [
+                    {
+                        "value": "standard",
+                        "display": "standard"
+                    },
+                    {
+                        "value": "single_cell",
+                        "display": "single cell"
+                    },
+                    {
+                        "value": "plasmid",
+                        "display": "plasmid"
+                    },
+                    {
+                        "value": "metagenomic",
+                        "display": "metagenomic"
+                    },
+                    {
+                        "value": "rna",
+                        "display": "rna"
+                    },
+                    {
+                        "value": "iontorrent",
+                        "display": "iontorrent"
+                    }
+                ]
             }
         },
         {
@@ -145,30 +145,30 @@
             "advanced": true,
             "allow_multiple": true,
             "default_values": ["careful"],
-            "field_type" : "dropdown",
-            "dropdown_options":{
-            "options": [
-                {
-                  "value": "careful",
-                  "display": "careful"
-                },
-                {
-                  "value": "only-error-correction",
-                  "display": "only-error-correction"
-                },
-                {
-                  "value": "only-assembler",
-                  "display": "only-assembler"
-                },
-                {
-                  "value": "continue",
-                  "display": "continue"
-                },
-                {
-                  "value": "disable-gzip-output",
-                  "display": "disable-gzip-output"
-                }
-              ]
+            "field_type": "dropdown",
+            "dropdown_options": {
+                "options": [
+                    {
+                        "value": "careful",
+                        "display": "careful"
+                    },
+                    {
+                        "value": "only-error-correction",
+                        "display": "only-error-correction"
+                    },
+                    {
+                        "value": "only-assembler",
+                        "display": "only-assembler"
+                    },
+                    {
+                        "value": "continue",
+                        "display": "continue"
+                    },
+                    {
+                        "value": "disable-gzip-output",
+                        "display": "disable-gzip-output"
+                    }
+                ]
             }
         },
         {
@@ -179,8 +179,8 @@
             "default_values": ["hybridSPAdes.Assembly"],
             "field_type": "text",
             "text_options": {
-                "valid_ws_types" : [ "KBaseGenomeAnnotations.Assembly" ],
-                "is_output_name":true
+                "valid_ws_types": [ "KBaseGenomeAnnotations.Assembly" ],
+                "is_output_name": true
             }
         },
         {
@@ -191,8 +191,8 @@
             "default_values": [ "500" ],
             "field_type": "text",
             "text_options": {
-                "validate_as" : "int",
-		        "min_int" : 0
+                "validate_as": "int",
+                "min_int": 0
             }
         },
         {
@@ -203,12 +203,44 @@
             "default_values": [],
             "field_type": "text",
             "text_options": {
-                "validate_as" : "int"
+                "validate_as": "int"
             }
+        },
+
+        /* ---- added for SPAdes 4.2 integration ---- */
+
+        {
+            "id": "threads",
+            "optional": true,
+            "advanced": false,
+            "allow_multiple": false,
+            "default_values": [ "16" ],
+            "field_type": "text",
+            "text_options": {
+                "validate_as": "int"
+            }
+        },
+        {
+            "id": "memory_gb",
+            "optional": true,
+            "advanced": true,
+            "allow_multiple": false,
+            "default_values": [ "250" ],
+            "field_type": "text",
+            "text_options": {
+                "validate_as": "int"
+            }
+        },
+        {
+            "id": "emit_gfa11",
+            "optional": true,
+            "advanced": true,
+            "allow_multiple": false,
+            "default_values": [ "0" ],
+            "field_type": "checkbox"
         }
     ],
-    "parameter-groups": 
-    [    
+    "parameter-groups": [
         {
             "id": "reads_libraries",
             "optional": false,
@@ -234,7 +266,7 @@
     "behavior": {
         "service-mapping": {
             "url": "",
-            "name":"kb_SPAdes",
+            "name": "kb_SPAdes",
             "method": "run_HybridSPAdes",
             "input_mapping": [
                 {
@@ -270,17 +302,29 @@
                     "target_property": "pipeline_options"
                 },
                 {
+                    "input_parameter": "threads",
+                    "target_property": "threads"
+                },
+                {
+                    "input_parameter": "memory_gb",
+                    "target_property": "memory_gb"
+                },
+                {
+                    "input_parameter": "emit_gfa11",
+                    "target_property": "emit_gfa11"
+                },
+                {
                     "constant_value": 1,
                     "target_property": "create_report"
                 }
             ],
             "output_mapping": [
                 {
-                    "service_method_output_path": [0,"report_name"],
+                    "service_method_output_path": [0, "report_name"],
                     "target_property": "report_name"
                 },
                 {
-                    "service_method_output_path": [0,"report_ref"],
+                    "service_method_output_path": [0, "report_ref"],
                     "target_property": "report_ref"
                 },
                 {
